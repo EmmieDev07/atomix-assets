@@ -1,0 +1,12 @@
+This is a placeholder. The actual Excel file with dropdowns will need to be created using a script or Excel itself, as direct .xlsx generation is not supported here. 
+
+Instructions for you:
+1. Open Excel and create a new workbook.
+2. In the first row, add your headers: Question,Question Type,Option A,Option B,Option C,Option D,Answer
+3. Select the cells under 'Question Type' where you want the dropdown.
+4. Go to Data > Data Validation.
+5. Set Allow: List, and enter: mcq,true_false,short_answer
+6. For MCQ questions, ensure the Answer column contains the exact text of one of the options (Option A, B, C, or D).
+7. Save the file as questions_template.xlsx in your templates folder.
+
+This will ensure users can only select from the allowed values in the dropdown.

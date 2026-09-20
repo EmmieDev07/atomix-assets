@@ -1,0 +1,12 @@
+This file is an Excel template for uploading questions. Please use the dropdown in the 'Question Type' column to select the type of question.
+
+[INSTRUCTIONS]
+- Fill in each row with your question data.
+- Use the dropdown in the 'Question Type' column to avoid typos.
+- Allowed values: mcq, true_false, short_answer
+
+[DATA STARTS BELOW]
+
+Question,Question Type,Option A,Option B,Option C,Option D,Answer
+
+[Add your questions below this row]
