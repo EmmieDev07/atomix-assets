@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teachers — Atomix Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Roboto, Arial, sans-serif; background: #f1f5f9; min-height: 100vh; display: flex; }
+        .sidebar { width: 260px; min-height: 100vh; background: linear-gradient(180deg,#1e3a5f 0%,#0f2844 100%); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; }
+        .sidebar-logo { padding: 1.5rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,.1); display: flex; align-items: center; gap: .75rem; }
+        .sidebar-logo i { font-size: 1.8rem; color: #38bdf8; }
+        .sidebar-logo span { color: #fff; font-size: 1.2rem; font-weight: 700; }
+        .sidebar-nav { flex: 1; padding: 1rem 0; overflow-y: auto; }
+        .nav-item { display: flex; align-items: center; gap: .75rem; padding: .75rem 1.25rem; color: #cbd5e1; text-decoration: none; font-size: .92rem; transition: background .2s, color .2s; }
+        .nav-item:hover, .nav-item.active { background: rgba(56,189,248,.15); color: #38bdf8; }
+        .nav-item i { width: 20px; text-align: center; }
+        .sidebar-footer { padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,.1); }
+        .btn-logout { width: 100%; padding: .65rem; background: rgba(239,68,68,.15); border: 1px solid rgba(239,68,68,.3); color: #fca5a5; border-radius: 8px; cursor: pointer; font-size: .9rem; transition: background .2s; }
+        .btn-logout:hover { background: rgba(239,68,68,.3); }
+        .main { margin-left: 260px; flex: 1; display: flex; flex-direction: column; }
+        .topbar { background: #fff; padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+        .topbar h2 { font-size: 1.25rem; color: #0f172a; font-weight: 700; }
+        .admin-badge { background: #e0f2fe; color: #0284c7; padding: .3rem .8rem; border-radius: 20px; font-size: .82rem; font-weight: 600; }
+        .content { padding: 1.5rem; flex: 1; }
+        .card { background: #fff; border-radius: 14px; padding: 1.25rem; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+        .toolbar { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; flex-wrap: wrap; }
+        .toolbar input { padding: .55rem .85rem; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: .9rem; outline: none; }
+        .toolbar input:focus { border-color: #0284c7; }
+        .btn { padding: .55rem 1.1rem; border: none; border-radius: 8px; font-size: .88rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: .4rem; transition: opacity .2s; }
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: #0284c7; color: #fff; }
+        .btn-success { background: #059669; color: #fff; }
+        .btn-warning { background: #d97706; color: #fff; }
+        .btn-danger  { background: #dc2626; color: #fff; }
+        .btn-info    { background: #0891b2; color: #fff; }
+        .btn-secondary { background: #64748b; color: #fff; }
+        .btn-sm { padding: .35rem .7rem; font-size: .8rem; }
+        table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+        th { background: #f8fafc; font-size: .78rem; text-transform: uppercase; letter-spacing: .5px; color: #64748b; padding: .65rem .75rem; text-align: left; white-space: nowrap; }
+        td { padding: .65rem .75rem; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        .badge { padding: .25rem .7rem; border-radius: 20px; font-size: .75rem; font-weight: 600; }
+        .badge-active   { background: #dcfce7; color: #166534; }
+        .badge-inactive { background: #fee2e2; color: #991b1b; }
+        .table-wrap { overflow-x: auto; }
+        .action-btns { display: flex; gap: .4rem; flex-wrap: wrap; }
+        .perm-badge { background: #e0f2fe; color: #0369a1; padding: .2rem .5rem; border-radius: 6px; font-size: .72rem; margin: .1rem; display: inline-block; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #fff; border-radius: 16px; padding: 1.75rem; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+        .modal h3 { font-size: 1.1rem; margin-bottom: 1.2rem; color: #0f172a; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: .85rem; font-weight: 600; color: #374151; margin-bottom: .3rem; }
+        .form-group input { width: 100%; padding: .6rem .85rem; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: .92rem; outline: none; }
+        .form-group input:focus { border-color: #0284c7; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+        .modal-footer { display: flex; gap: .75rem; justify-content: flex-end; margin-top: 1.25rem; }
+        .perm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+        .perm-item { display: flex; align-items: center; gap: .5rem; font-size: .88rem; }
+        @media(max-width:768px){ .sidebar{display:none} .main{margin-left:0} .form-row{grid-template-columns:1fr} }
+    </style>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-logo"><i class="fas fa-atom"></i><span>Atomix Admin</span></div>
+    <nav class="sidebar-nav">
+        <a href="dashboard.html"    class="nav-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="teachers.html"     class="nav-item active"><i class="fas fa-chalkboard-teacher"></i> Teachers</a>
+        <a href="students.html"     class="nav-item"><i class="fas fa-user-graduate"></i> Students</a>
+        <a href="school_years.html" class="nav-item"><i class="fas fa-calendar-alt"></i> School Years</a>
+        <a href="questions.html"    class="nav-item"><i class="fas fa-question-circle"></i> Questions</a>
+        <a href="analytics.html"    class="nav-item"><i class="fas fa-chart-bar"></i> Analytics</a>
+        <a href="backup.html"       class="nav-item"><i class="fas fa-database"></i> Backup</a>
+        <a href="system.html"       class="nav-item"><i class="fas fa-server"></i> System</a>
+    </nav>
+    <div class="sidebar-footer"><button class="btn-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button></div>
+</aside>
+
+<div class="main">
+    <div class="topbar">
+        <h2><i class="fas fa-chalkboard-teacher"></i> Teachers</h2>
+        <span class="admin-badge" id="adminName">Admin</span>
+    </div>
+    <div class="content">
+        <div class="card">
+            <div class="toolbar">
+                <input type="text" id="searchInput" placeholder="Search teachers…" oninput="filterTable()">
+                <button class="btn btn-primary" onclick="openCreateModal()"><i class="fas fa-plus"></i> Add Teacher</button>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Permissions</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teachersBody">
+                        <tr><td colspan="7" style="text-align:center;padding:2rem;color:#94a3b8"><i class="fas fa-spinner fa-spin"></i> Loading…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create / Edit Modal -->
+<div class="modal-overlay" id="formModal">
+    <div class="modal">
+        <h3 id="modalTitle">Add Teacher</h3>
+        <form id="teacherForm">
+            <input type="hidden" id="teacherId">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>First Name</label>
+                    <input type="text" id="firstName" required placeholder="First name">
+                </div>
+                <div class="form-group">
+                    <label>Last Name</label>
+                    <input type="text" id="lastName" required placeholder="Last name">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="email" required placeholder="teacher@school.edu">
+            </div>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="username" required placeholder="username">
+            </div>
+            <div class="form-group" id="passwordGroup">
+                <label>Password <small style="color:#94a3b8">(leave blank to use "changeme")</small></label>
+                <input type="password" id="password" placeholder="Min 6 chars">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeFormModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="submitBtn">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Permissions Modal -->
+<div class="modal-overlay" id="permModal">
+    <div class="modal">
+        <h3 id="permTitle">Permissions</h3>
+        <form id="permForm">
+            <input type="hidden" id="permTeacherId">
+            <div class="perm-grid">
+                <label class="perm-item"><input type="checkbox" name="can_manage_questions"> Manage Questions</label>
+                <label class="perm-item"><input type="checkbox" name="can_manage_quizzes">   Manage Quizzes</label>
+                <label class="perm-item"><input type="checkbox" name="can_view_reports">     View Reports</label>
+                <label class="perm-item"><input type="checkbox" name="can_manage_classes">   Manage Classes</label>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closePermModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Permissions</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/api.js"></script>
+<script>
+    Auth.requireAuth('login.html');
+    const user = Auth.getUser();
+    if (user) document.getElementById('adminName').textContent = user.name || 'Admin';
+
+    let allTeachers = [];
+    const PERMS = ['can_manage_questions','can_manage_quizzes','can_view_reports','can_manage_classes'];
+    const PERM_LABELS = { can_manage_questions:'Questions', can_manage_quizzes:'Quizzes', can_view_reports:'Reports', can_manage_classes:'Classes' };
+
+    async function loadTeachers() {
+        const data = await Api.get('teacher_api.php?action=list');
+        if (!data.success) { Swal.fire('Error', data.message, 'error'); return; }
+        allTeachers = data.teachers;
+        renderTable(allTeachers);
+    }
+
+    function renderTable(teachers) {
+        const tbody = document.getElementById('teachersBody');
+        if (!teachers.length) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:#94a3b8">No teachers found.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = teachers.map((t, i) => {
+            const perms = (t.permissions || []).map(p => `<span class="perm-badge">${PERM_LABELS[p]||p}</span>`).join('');
+            const statusBadge = t.status === 'active'
+                ? '<span class="badge badge-active">Active</span>'
+                : '<span class="badge badge-inactive">Inactive</span>';
+            return `<tr>
+                <td>${i+1}</td>
+                <td>${t.first_name} ${t.last_name}</td>
+                <td>${t.username}</td>
+                <td>${t.email}</td>
+                <td>${statusBadge}</td>
+                <td>${perms || '<span style="color:#94a3b8;font-size:.8rem">None</span>'}</td>
+                <td>
+                    <div class="action-btns">
+                        <button class="btn btn-warning btn-sm" onclick="openEditModal(${t.teacher_id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-info btn-sm" onclick="openPermModal(${t.teacher_id},'${t.first_name} ${t.last_name}')"><i class="fas fa-shield-alt"></i></button>
+                        <button class="btn btn-secondary btn-sm" onclick="resetPassword(${t.teacher_id})"><i class="fas fa-key"></i></button>
+                        <button class="btn ${t.status==='active'?'btn-danger':'btn-success'} btn-sm" onclick="toggleStatus(${t.teacher_id},'${t.status}')">
+                            <i class="fas fa-${t.status==='active'?'ban':'check'}"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteTeacher(${t.teacher_id},'${t.first_name} ${t.last_name}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    function filterTable() {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        renderTable(allTeachers.filter(t =>
+            (t.first_name + ' ' + t.last_name + ' ' + t.username + ' ' + t.email).toLowerCase().includes(q)
+        ));
+    }
+
+    // ─── Create modal ───
+    function openCreateModal() {
+        document.getElementById('modalTitle').textContent = 'Add Teacher';
+        document.getElementById('teacherForm').reset();
+        document.getElementById('teacherId').value = '';
+        document.getElementById('passwordGroup').style.display = 'block';
+        document.getElementById('formModal').classList.add('show');
+    }
+
+    function openEditModal(id) {
+        const t = allTeachers.find(x => x.teacher_id === id);
+        if (!t) return;
+        document.getElementById('modalTitle').textContent = 'Edit Teacher';
+        document.getElementById('teacherId').value = t.teacher_id;
+        document.getElementById('firstName').value = t.first_name;
+        document.getElementById('lastName').value  = t.last_name;
+        document.getElementById('email').value     = t.email;
+        document.getElementById('username').value  = t.username;
+        document.getElementById('passwordGroup').style.display = 'none';
+        document.getElementById('formModal').classList.add('show');
+    }
+
+    function closeFormModal() { document.getElementById('formModal').classList.remove('show'); }
+
+    document.getElementById('teacherForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('teacherId').value;
+        const payload = {
+            first_name: document.getElementById('firstName').value.trim(),
+            last_name:  document.getElementById('lastName').value.trim(),
+            email:      document.getElementById('email').value.trim(),
+            username:   document.getElementById('username').value.trim(),
+        };
+        if (!id) payload.password = document.getElementById('password').value;
+
+        const endpoint = id
+            ? `teacher_api.php?action=update`
+            : `teacher_api.php?action=create`;
+
+        if (id) payload.teacher_id = parseInt(id);
+
+        const data = await Api.postUrlEncoded(endpoint, payload);
+        if (data.success) {
+            Swal.fire({ icon:'success', title:'Success', text: data.message, timer:1500, showConfirmButton:false });
+            closeFormModal();
+            loadTeachers();
+        } else {
+            Swal.fire('Error', data.message, 'error');
+        }
+    });
+
+    // ─── Permissions modal ───
+    async function openPermModal(id, name) {
+        document.getElementById('permTitle').textContent = `Permissions — ${name}`;
+        document.getElementById('permTeacherId').value = id;
+        // Uncheck all first
+        PERMS.forEach(p => document.querySelector(`[name="${p}"]`).checked = false);
+        const data = await Api.get(`teacher_api.php?action=get_permissions&id=${id}`);
+        if (data.success) {
+            data.permissions.forEach(p => {
+                const el = document.querySelector(`[name="${p}"]`);
+                if (el) el.checked = true;
+            });
+        }
+        document.getElementById('permModal').classList.add('show');
+    }
+
+    function closePermModal() { document.getElementById('permModal').classList.remove('show'); }
+
+    document.getElementById('permForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('permTeacherId').value;
+        const perms = PERMS.filter(p => document.querySelector(`[name="${p}"]`).checked);
+        const data = await Api.post(`teacher_api.php?action=update_permissions`, { teacher_id: parseInt(id), permissions: perms });
+        if (data.success) {
+            Swal.fire({ icon:'success', title:'Saved', timer:1200, showConfirmButton:false });
+            closePermModal();
+            loadTeachers();
+        } else { Swal.fire('Error', data.message, 'error'); }
+    });
+
+    // ─── Other actions ───
+    async function resetPassword(id) {
+        const { value: pass } = await Swal.fire({
+            title: 'Reset Password', input: 'password',
+            inputPlaceholder: 'New password (min 6 chars)',
+            showCancelButton: true, confirmButtonText: 'Reset'
+        });
+        if (!pass) return;
+        const data = await Api.post('teacher_api.php?action=reset_password', { teacher_id: id, new_password: pass });
+        Swal.fire(data.success ? { icon:'success', title:'Password reset', timer:1500, showConfirmButton:false } : { icon:'error', title: data.message });
+    }
+
+    async function toggleStatus(id, currentStatus) {
+        const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+        const ok = await Swal.fire({ title:`Set teacher ${newStatus}?`, icon:'question', showCancelButton:true, confirmButtonText:'Yes' });
+        if (!ok.isConfirmed) return;
+        const data = await Api.post('teacher_api.php?action=toggle_status', { teacher_id: id, status: newStatus });
+        if (data.success) { Swal.fire({ icon:'success', timer:1200, showConfirmButton:false }); loadTeachers(); }
+        else Swal.fire('Error', data.message, 'error');
+    }
+
+    async function deleteTeacher(id, name) {
+        const ok = await Swal.fire({ title:`Delete ${name}?`, text:'This will deactivate the account.', icon:'warning', showCancelButton:true, confirmButtonColor:'#dc2626', confirmButtonText:'Delete' });
+        if (!ok.isConfirmed) return;
+        const data = await Api.post('teacher_api.php?action=delete', { teacher_id: id });
+        if (data.success) { Swal.fire({ icon:'success', timer:1200, showConfirmButton:false }); loadTeachers(); }
+        else Swal.fire('Error', data.message, 'error');
+    }
+
+    function doLogout() {
+        Swal.fire({ title:'Logout?', icon:'question', showCancelButton:true, confirmButtonText:'Yes, logout' })
+            .then(r => { if(r.isConfirmed) Auth.logout(); });
+    }
+
+    loadTeachers();
+</script>
+</body>
+</html>

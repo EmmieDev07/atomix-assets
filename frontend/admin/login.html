@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login — Atomix</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 50%, #81d4fa 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 8px 40px rgba(0,0,0,.12);
+        }
+        .logo { text-align: center; margin-bottom: 1.5rem; }
+        .logo i { font-size: 2.5rem; color: #0284c7; }
+        .logo h1 { font-size: 1.6rem; color: #0f172a; margin-top: .4rem; }
+        .logo span { font-size: .85rem; color: #64748b; }
+        label { display: block; font-size: .85rem; font-weight: 600; color: #374151; margin-bottom: .3rem; }
+        .input-wrap { position: relative; margin-bottom: 1rem; }
+        .input-wrap i { position: absolute; left: .85rem; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+        input[type="text"], input[type="password"], input[type="number"] {
+            width: 100%; padding: .65rem .75rem .65rem 2.3rem;
+            border: 1.5px solid #e2e8f0; border-radius: 10px;
+            font-size: .95rem; color: #1e293b; outline: none; transition: border .2s;
+        }
+        input:focus { border-color: #0284c7; }
+        .captcha-row { display: flex; gap: .6rem; align-items: flex-end; margin-bottom: 1rem; }
+        .captcha-box {
+            background: linear-gradient(135deg, #0284c7, #0ea5e9);
+            color: #fff; border-radius: 10px;
+            padding: .6rem 1rem; font-size: 1.1rem; font-weight: 700;
+            white-space: nowrap; min-width: 110px; text-align: center;
+            letter-spacing: 2px; cursor: pointer; user-select: none;
+        }
+        .captcha-answer { flex: 1; }
+        .btn-login {
+            width: 100%; padding: .8rem;
+            background: linear-gradient(135deg, #0284c7, #0ea5e9);
+            color: #fff; border: none; border-radius: 10px;
+            font-size: 1rem; font-weight: 700; cursor: pointer;
+            transition: opacity .2s;
+        }
+        .btn-login:hover { opacity: .9; }
+        .btn-login:disabled { opacity: .6; cursor: not-allowed; }
+        #error-msg { color: #dc2626; font-size: .85rem; margin-bottom: .75rem; display: none; }
+    </style>
+</head>
+<body>
+<div class="login-card">
+    <div class="logo">
+        <i class="fas fa-atom"></i>
+        <h1>Atomix Admin</h1>
+        <span>Sign in to your dashboard</span>
+    </div>
+
+    <div id="error-msg"></div>
+
+    <form id="loginForm" novalidate>
+        <label>Username</label>
+        <div class="input-wrap">
+            <i class="fas fa-user"></i>
+            <input type="text" id="username" name="username" placeholder="Enter username" autocomplete="username" required>
+        </div>
+
+        <label>Password</label>
+        <div class="input-wrap">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="password" name="password" placeholder="Enter password" autocomplete="current-password" required>
+        </div>
+
+        <label>Math Verification</label>
+        <div class="captcha-row">
+            <div class="captcha-box" id="captchaDisplay" title="Click to refresh">
+                <i class="fas fa-spinner fa-spin"></i>
+            </div>
+            <div class="input-wrap captcha-answer" style="margin-bottom:0">
+                <i class="fas fa-calculator"></i>
+                <input type="number" id="captchaAnswer" placeholder="Answer" required>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-login" id="loginBtn">
+            <i class="fas fa-sign-in-alt"></i> Sign In
+        </button>
+    </form>
+</div>
+
+<script>
+    const API = '../../api';
+    let captchaAnswer = null;
+
+    async function loadCaptcha() {
+        try {
+            const res = await fetch(`${API}/auth_api.php?action=captcha`);
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('captchaDisplay').textContent = data.question;
+                captchaAnswer = data.answer;
+            }
+        } catch {
+            document.getElementById('captchaDisplay').textContent = 'Error';
+        }
+    }
+
+    document.getElementById('captchaDisplay').addEventListener('click', loadCaptcha);
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const userAnswer = document.getElementById('captchaAnswer').value.trim();
+        const errEl = document.getElementById('error-msg');
+        const btn = document.getElementById('loginBtn');
+
+        errEl.style.display = 'none';
+
+        if (!username || !password) {
+            errEl.textContent = 'Please enter username and password.';
+            errEl.style.display = 'block';
+            return;
+        }
+        if (parseInt(userAnswer) !== captchaAnswer) {
+            errEl.textContent = 'Incorrect math answer. Please try again.';
+            errEl.style.display = 'block';
+            loadCaptcha();
+            document.getElementById('captchaAnswer').value = '';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in…';
+
+        try {
+            const res = await fetch(`${API}/auth_api.php?action=login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, role: 'admin' })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                localStorage.setItem('atomix_token', data.token);
+                localStorage.setItem('atomix_user', JSON.stringify(data.user));
+                window.location.href = 'dashboard.html';
+            } else {
+                errEl.textContent = data.message || 'Login failed.';
+                errEl.style.display = 'block';
+                loadCaptcha();
+                document.getElementById('captchaAnswer').value = '';
+            }
+        } catch {
+            errEl.textContent = 'Network error. Please try again.';
+            errEl.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In';
+        }
+    });
+
+    // Load captcha on page load
+    loadCaptcha();
+</script>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — Atomix Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Roboto, Arial, sans-serif; background: #f1f5f9; min-height: 100vh; display: flex; }
+
+        /* Sidebar */
+        .sidebar { width: 260px; min-height: 100vh; background: linear-gradient(180deg,#1e3a5f 0%,#0f2844 100%); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; }
+        .sidebar-logo { padding: 1.5rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,.1); display: flex; align-items: center; gap: .75rem; }
+        .sidebar-logo i { font-size: 1.8rem; color: #38bdf8; }
+        .sidebar-logo span { color: #fff; font-size: 1.2rem; font-weight: 700; }
+        .sidebar-nav { flex: 1; padding: 1rem 0; overflow-y: auto; }
+        .nav-item { display: flex; align-items: center; gap: .75rem; padding: .75rem 1.25rem; color: #cbd5e1; text-decoration: none; font-size: .92rem; transition: background .2s, color .2s; }
+        .nav-item:hover, .nav-item.active { background: rgba(56,189,248,.15); color: #38bdf8; }
+        .nav-item i { width: 20px; text-align: center; }
+        .sidebar-footer { padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,.1); }
+        .btn-logout { width: 100%; padding: .65rem; background: rgba(239,68,68,.15); border: 1px solid rgba(239,68,68,.3); color: #fca5a5; border-radius: 8px; cursor: pointer; font-size: .9rem; transition: background .2s; }
+        .btn-logout:hover { background: rgba(239,68,68,.3); }
+
+        /* Main */
+        .main { margin-left: 260px; flex: 1; display: flex; flex-direction: column; }
+        .topbar { background: #fff; padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+        .topbar h2 { font-size: 1.25rem; color: #0f172a; font-weight: 700; }
+        .admin-badge { background: #e0f2fe; color: #0284c7; padding: .3rem .8rem; border-radius: 20px; font-size: .82rem; font-weight: 600; }
+        .content { padding: 1.5rem; flex: 1; }
+
+        /* Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+        .stat-card { background: #fff; border-radius: 14px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 2px 12px rgba(0,0,0,.06); border-left: 4px solid #0284c7; }
+        .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: #fff; flex-shrink: 0; }
+        .stat-num { font-size: 1.8rem; font-weight: 700; color: #0f172a; }
+        .stat-lbl { font-size: .8rem; color: #64748b; text-transform: uppercase; letter-spacing: .5px; }
+
+        /* Table card */
+        .card { background: #fff; border-radius: 14px; padding: 1.25rem; box-shadow: 0 2px 12px rgba(0,0,0,.06); margin-bottom: 1rem; }
+        .card-title { font-size: 1rem; font-weight: 700; color: #0f172a; margin-bottom: 1rem; display: flex; align-items: center; gap: .5rem; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+        th { background: #f8fafc; font-size: .78rem; text-transform: uppercase; letter-spacing: .5px; color: #64748b; padding: .6rem .75rem; text-align: left; }
+        td { padding: .6rem .75rem; border-bottom: 1px solid #f1f5f9; color: #334155; }
+        tr:last-child td { border-bottom: none; }
+        .skeleton { background: linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%); background-size: 200% 100%; animation: sk 1.2s infinite; border-radius: 4px; height: 14px; }
+        @keyframes sk { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+        @media(max-width:768px){ .sidebar{display:none} .main{margin-left:0} .grid-2{grid-template-columns:1fr} }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <i class="fas fa-atom"></i>
+        <span>Atomix Admin</span>
+    </div>
+    <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="teachers.html"  class="nav-item"><i class="fas fa-chalkboard-teacher"></i> Teachers</a>
+        <a href="students.html"  class="nav-item"><i class="fas fa-user-graduate"></i> Students</a>
+        <a href="school_years.html" class="nav-item"><i class="fas fa-calendar-alt"></i> School Years</a>
+        <a href="questions.html" class="nav-item"><i class="fas fa-question-circle"></i> Questions</a>
+        <a href="analytics.html" class="nav-item"><i class="fas fa-chart-bar"></i> Analytics</a>
+        <a href="backup.html"    class="nav-item"><i class="fas fa-database"></i> Backup</a>
+        <a href="system.html"    class="nav-item"><i class="fas fa-server"></i> System</a>
+    </nav>
+    <div class="sidebar-footer">
+        <button class="btn-logout" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+    <div class="topbar">
+        <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+        <span class="admin-badge" id="adminName">Admin</span>
+    </div>
+    <div class="content">
+
+        <!-- Stats -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card"><div class="stat-icon" style="background:#0284c7"><i class="fas fa-user-graduate"></i></div><div><div class="stat-num" id="s-students">—</div><div class="stat-lbl">Students</div></div></div>
+            <div class="stat-card" style="border-color:#7c3aed"><div class="stat-icon" style="background:#7c3aed"><i class="fas fa-chalkboard-teacher"></i></div><div><div class="stat-num" id="s-teachers">—</div><div class="stat-lbl">Teachers</div></div></div>
+            <div class="stat-card" style="border-color:#059669"><div class="stat-icon" style="background:#059669"><i class="fas fa-school"></i></div><div><div class="stat-num" id="s-classes">—</div><div class="stat-lbl">Classes</div></div></div>
+            <div class="stat-card" style="border-color:#d97706"><div class="stat-icon" style="background:#d97706"><i class="fas fa-file-alt"></i></div><div><div class="stat-num" id="s-quizzes">—</div><div class="stat-lbl">Quizzes</div></div></div>
+            <div class="stat-card" style="border-color:#dc2626"><div class="stat-icon" style="background:#dc2626"><i class="fas fa-question-circle"></i></div><div><div class="stat-num" id="s-questions">—</div><div class="stat-lbl">Questions</div></div></div>
+            <div class="stat-card" style="border-color:#0891b2"><div class="stat-icon" style="background:#0891b2"><i class="fas fa-calendar-check"></i></div><div><div class="stat-num" id="s-sycars">—</div><div class="stat-lbl">Active School Years</div></div></div>
+        </div>
+
+        <!-- Recent tables -->
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-title"><i class="fas fa-user-graduate" style="color:#0284c7"></i> Recent Students</div>
+                <table>
+                    <thead><tr><th>Name</th><th>Class</th><th>Joined</th></tr></thead>
+                    <tbody id="recentStudents"><tr><td colspan="3"><div class="skeleton"></div></td></tr></tbody>
+                </table>
+            </div>
+            <div class="card">
+                <div class="card-title"><i class="fas fa-chalkboard-teacher" style="color:#7c3aed"></i> Recent Teachers</div>
+                <table>
+                    <thead><tr><th>Name</th><th>Email</th><th>Joined</th></tr></thead>
+                    <tbody id="recentTeachers"><tr><td colspan="3"><div class="skeleton"></div></td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/api.js"></script>
+<script>
+    Auth.requireAuth('login.html');
+    const user = Auth.getUser();
+    if (user) document.getElementById('adminName').textContent = user.name || 'Admin';
+
+    function fmt(dateStr) {
+        if (!dateStr) return '—';
+        return new Date(dateStr).toLocaleDateString('en-PH', {month:'short', day:'numeric', year:'numeric'});
+    }
+
+    async function loadStats() {
+        const data = await Api.get('dashboard_api.php?action=stats');
+        if (!data.success) return;
+        document.getElementById('s-students').textContent  = data.total_students   ?? 0;
+        document.getElementById('s-teachers').textContent  = data.total_teachers   ?? 0;
+        document.getElementById('s-classes').textContent   = data.total_classes    ?? 0;
+        document.getElementById('s-quizzes').textContent   = data.total_assessments ?? 0;
+        document.getElementById('s-questions').textContent = data.total_questions  ?? 0;
+        document.getElementById('s-sycars').textContent    = data.active_school_years ?? 0;
+    }
+
+    async function loadRecentStudents() {
+        const data = await Api.get('dashboard_api.php?action=recent_students');
+        const tbody = document.getElementById('recentStudents');
+        if (!data.success || !data.students.length) {
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8">No students yet</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.students.map(s => `
+            <tr>
+                <td>${s.first_name} ${s.last_name}</td>
+                <td>${s.class_name || '—'}</td>
+                <td>${fmt(s.created_at)}</td>
+            </tr>`).join('');
+    }
+
+    async function loadRecentTeachers() {
+        const data = await Api.get('dashboard_api.php?action=recent_teachers');
+        const tbody = document.getElementById('recentTeachers');
+        if (!data.success || !data.teachers.length) {
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#94a3b8">No teachers yet</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.teachers.map(t => `
+            <tr>
+                <td>${t.first_name} ${t.last_name}</td>
+                <td>${t.email || '—'}</td>
+                <td>${fmt(t.created_at)}</td>
+            </tr>`).join('');
+    }
+
+    function doLogout() {
+        Swal.fire({ title:'Logout?', icon:'question', showCancelButton:true, confirmButtonText:'Yes, logout' })
+            .then(r => { if(r.isConfirmed) Auth.logout(); });
+    }
+
+    (async () => {
+        await Promise.all([loadStats(), loadRecentStudents(), loadRecentTeachers()]);
+    })();
+</script>
+</body>
+</html>
